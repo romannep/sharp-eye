@@ -22,15 +22,25 @@ namespace sharp_eye
 
         private EyeXHost eyeX;
 
-        double PCM=45.5, SPEED=7.0, FW=24.0, FH=16.0, FREQ=25.0;
+        double PCM=45.5, SPEED=4.0, FW=24.0, FH=16.0, FREQ=25.0, DS=0.3;
+        //Pixels per CM, cm per second, Field Width in cm, Field Heigth in cm, frames per sec, Dot Size in cm
         int DY = 30;
+        //field Delta by Y
+
+        double bcrad = 7, bcd = 3, ll0 = 8.5, scrad, scx, scy;
+        double lineLen, ll1, ll2, ll3;
+        int tmpx, tmpy;
+        Point cP;
+        double etmpx, etmpy;
+
+        List<Point> gazeData;
 
         int rad = 20;
         int centr = 200;
         int radius = 200;
         float angle = 0;
         int step = 1;
-        double tmpx, tmpy;
+
 
         Point pointCM(double cmx, double cmy)
         {
@@ -44,6 +54,15 @@ namespace sharp_eye
         {
             return pointCM(xc+r*Math.Cos(startAngle + length/r),yc+r*Math.Sin(startAngle+length/r));
         }
+        void drawDot(int x, int y)
+        {
+            //gr.FillRectangle(fon, 0, 0, 500, 500);
+            gr.DrawEllipse(p, x, y, (int)(DS*PCM), (int)(DS* PCM));
+            gr.FillEllipse(fig, x, y, (int)(DS * PCM), (int)(DS * PCM));
+            //updateGr();
+
+        }
+ 
         public Form1()
         {
             InitializeComponent();
@@ -51,16 +70,100 @@ namespace sharp_eye
 
         private void timer1_Tick(object sender, EventArgs e)
         {
+            gazeData.Add(this.PointToClient(new Point((int)etmpx, (int)etmpy)));
+
             gr.FillRectangle(fon, 0, 0, (int) (PCM * FW), (int)(PCM*FH));
-            
+
+            if (lineLen < ll0)
+            {
+                cP = pointCM(length45x(lineLen), length45x(lineLen));
+            }
+            else if (lineLen < ll1 + ll0)
+            {
+                cP = pointRl(scx, scy, scrad, Math.PI / 4 * 3, ll0 - lineLen);
+            }
+            else if (lineLen < ll1 + ll0 + ll2)
+            {
+                cP = pointRl(scx, scy, scrad, 0 - Math.PI / 4, 0);
+                cP.X -= (int)(PCM * length45x(lineLen - ll0 - ll1));
+                cP.Y += (int)(PCM * length45x(lineLen - ll0 - ll1));
+            }
+            else if (lineLen < ll1 + ll0 + ll2 + ll3)
+            {
+                cP = pointRl(0 - bcd, 0, bcrad, 0 - Math.PI / 4, ll0 + ll1 + ll2 - lineLen);
+            }
+            else if (lineLen < ll1 + ll0 + ll2 * 2 + ll3)
+            {
+                cP = pointRl(0 - bcd, 0, bcrad, Math.PI / 4, 0);
+                cP.X += (int)(PCM * length45x(lineLen - ll0 - ll1 - ll2 - ll3));
+                cP.Y += (int)(PCM * length45x(lineLen - ll0 - ll1 - ll2 - ll3));
+            }
+            else if (lineLen < ll0 + ll1 * 2 + ll2 * 2 + ll3)
+            {
+                cP = pointRl(scx, 0 - scy, scrad, Math.PI / 4, ll1 + ll0 + ll2 * 2 + ll3 - lineLen);
+            }
+            else if (lineLen < ll0 * 3 + ll1 * 2 + ll2 * 2 + ll3)
+            {
+                cP = pointRl(scx, 0 - scy, scrad, 0 - Math.PI * 3 / 4, 0);
+                cP.X -= (int)(PCM * length45x(lineLen - (ll0 + ll1 * 2 + ll2 * 2 + ll3)));
+                cP.Y -= (int)(PCM * length45x(lineLen - (ll0 + ll1 * 2 + ll2 * 2 + ll3)));
+            }
+            else if (lineLen < ll0 * 3 + ll1 * 3 + ll2 * 2 + ll3)
+            {
+                cP = pointRl(0 - scx, scy, scrad, Math.PI / 4, lineLen - (ll0 * 3 + ll1 * 2 + ll2 * 2 + ll3));
+            }
+            else if (lineLen < ll0 * 3 + ll1 * 3 + ll2 * 3 + ll3)
+            {
+                cP = pointRl(0 - scx, scy, scrad, Math.PI * 5 / 4, 0);
+                cP.X += (int)(PCM * length45x(lineLen - (ll0 * 3 + ll1 * 3 + ll2 * 2 + ll3)));
+                cP.Y += (int)(PCM * length45x(lineLen - (ll0 * 3 + ll1 * 3 + ll2 * 2 + ll3)));
+            }
+            else if (lineLen < ll0 * 3 + ll1 * 3 + ll2 * 3 + ll3 * 2)
+            {
+                cP = pointRl(bcd, 0, bcrad, 0 - Math.PI * 3 / 4, lineLen - (ll0 * 3 + ll1 * 3 + ll2 * 3 + ll3));
+            }
+            else if (lineLen < ll0 * 3 + ll1 * 3 + ll2 * 4 + ll3 * 2)
+            {
+                cP = pointRl(bcd, 0, bcrad, Math.PI * 3 / 4, 0);
+                cP.X -= (int)(PCM * length45x(lineLen - (ll0 * 3 + ll1 * 3 + ll2 * 3 + ll3 * 2)));
+                cP.Y += (int)(PCM * length45x(lineLen - (ll0 * 3 + ll1 * 3 + ll2 * 3 + ll3 * 2)));
+            }
+            else if (lineLen < ll0 * 3 + ll1 * 4 + ll2 * 4 + ll3 * 2)
+            {
+                cP = pointRl(0 - scx, 0 - scy, scrad, Math.PI * 3 / 4, lineLen - (ll0 * 3 + ll1 * 3 + ll2 * 4 + ll3 * 2));
+            }
+            else if (lineLen < ll0 * 4 + ll1 * 4 + ll2 * 4 + ll3 * 2)
+            {
+                cP = pointRl(0 - scx, 0 - scy, scrad, 0 - Math.PI * 1 / 4, 0);
+                cP.X += (int)(PCM * length45x(lineLen - (ll0 * 3 + ll1 * 4 + ll2 * 4 + ll3 * 2)));
+                cP.Y -= (int)(PCM * length45x(lineLen - (ll0 * 3 + ll1 * 4 + ll2 * 4 + ll3 * 2)));
+            }
+            else
+            {
+                timer1.Enabled = false;
+                gr.FillRectangle(fon, 0, 0, (int)(PCM * FW), (int)(PCM * FH));
+                for (var i =1; i<gazeData.Count; i++)
+                {
+                    gr.DrawLine(p, gazeData[i-1].X, gazeData[i-1].Y, gazeData[i].X, gazeData[i].Y);
+                }
+
+            }
+
+            drawDot(cP.X, cP.Y);
+            lineLen += SPEED / FW;
+
+            /*
             angle += step;
             if (angle>360) { angle = 0; timer1.Enabled = false; }
             double posx = centr + radius * Math.Sin(Math.PI/2 + angle / 360*Math.PI*2);
             double posy = centr + radius * Math.Cos(Math.PI/2 + angle / 360*Math.PI*2);
             drawCircle((int) posx, (int) posy);
+            */
+
             Invalidate();
+            
+
             /*
-            var point = this.PointToClient(new Point((int)tmpx ,(int)tmpy));
             textBox1.Text = "Coords x:" + (int)tmpx + " y:" + (int)tmpy;
             drawCircle(point.X, point.Y);
             */
@@ -74,35 +177,67 @@ namespace sharp_eye
             fon = new SolidBrush(Color.White); // и для заливки
             fig = new SolidBrush(Color.Black);
             gr.FillRectangle(fon, 0, 0, (int)(PCM * FW), (int)(PCM * FH));
+            cP = pointCM(0, 0);
+            drawDot(cP.X, cP.Y);
+
+            
+            gazeData = new List<Point>();
+            /*
+            gazeData.Add(new Point(50, 50));
+            gazeData.Add(new Point(500, 150));
+            for (var i = 1; i < gazeData.Count; i++)
+            {
+                gr.DrawLine(p, gazeData[i - 1].X, gazeData[i - 1].Y, gazeData[i].X, gazeData[i].Y);
+            }
+            gazeData.Clear();
+            */
+
             Invalidate();
 
         }
 
         private void button1_Click(object sender, EventArgs e)
         {
+            //fill consts
+            scrad = (bcrad - bcd * Math.Cos(Math.PI / 4))/2;
+            scx = length45x(ll0) + scrad * Math.Cos(Math.PI / 4);
+            scy = length45x(ll0) - scrad * Math.Cos(Math.PI / 4);
+            ll1 = Math.PI * scrad;
+            ll2 = (ll0 + scrad * 2 - bcrad) + bcd / Math.Cos(Math.PI / 4);
+            ll3 = Math.PI * bcrad * 1.5;
+            lineLen = 0;
 
-            var centrPoint = pointCM(0, 0);
-            var p1 = pointCM(length45x(8), length45x(8));
-            gr.DrawLine(p, centrPoint.X, centrPoint.Y, p1.X, p1.Y);
-            var p2 = pointRl(3.0,0,7,Math.PI/4*3,0);
-            drawCircle(p2.X, p2.Y);
-            p2 = pointRl(3.0, 0, 7, Math.PI / 4 * 3, -3);
-            drawCircle(p2.X, p2.Y);
-            p2 = pointRl(3.0, 0, 7, Math.PI / 4 * 3, -6);
-            drawCircle(p2.X, p2.Y);
-            p2 = pointRl(3.0, 0, 7, Math.PI / 4 * 3, -9);
-            drawCircle(p2.X, p2.Y);
-            p2 = pointRl(3.0, 0, 7, Math.PI / 4 * 3, -Math.PI*1.5*7);
-            drawCircle(p2.X, p2.Y);
+            //set timer
+            timer1.Interval = (int)( 1 / FREQ * 1000);
+            timer1.Enabled = true;
 
-            Invalidate();
             /*
+            var centrPoint = pointCM(0, 0);
+            //var p1 = pointCM(length45x(8), length45x(8));
+            //gr.DrawLine(p, centrPoint.X, centrPoint.Y, p1.X, p1.Y);
+            var p2 = pointRl(3.0,0,7,Math.PI/4*3,0);
+            drawDot(p2.X, p2.Y);
+            p2 = pointRl(3.0, 0, 7, Math.PI / 4 * 3, -3);
+            drawDot(p2.X, p2.Y);
+            p2 = pointRl(3.0, 0, 7, Math.PI / 4 * 3, -6);
+            drawDot(p2.X, p2.Y);
+            p2 = pointRl(3.0, 0, 7, Math.PI / 4 * 3, -8);
+            drawDot(p2.X, p2.Y);
+            p2 = pointRl(3.0, 0, 7, Math.PI / 4 * 3, -Math.PI*1.5*7);
+            drawDot(p2.X, p2.Y);
+            
+            Invalidate();
+            */
+
+            
             eyeX = new EyeXHost();
             eyeX.Start();
             
-
+            
             var stream = eyeX.CreateGazePointDataStream(GazePointDataMode.LightlyFiltered);
             stream.Next += Stream_Next;
+
+            /*
             timer1.Enabled = true;
             */
 
@@ -122,8 +257,8 @@ namespace sharp_eye
         {
             //drawCircle(100, 100);
             //textBox1.Text = "Gaze point at " + e.X + " " + e.Y;
-            tmpx = e.X;
-            tmpy = e.Y;
+            etmpx = e.X;
+            etmpy = e.Y;
         }
 
         private void button2_Click(object sender, EventArgs e)
