@@ -32,6 +32,7 @@ namespace sharp_eye
         int tmpx, tmpy;
         Point cP;
         double etmpx, etmpy;
+        GazePointDataStream stream;
 
         List<Point> gazeData;
 
@@ -70,28 +71,34 @@ namespace sharp_eye
 
         private void timer1_Tick(object sender, EventArgs e)
         {
-            gazeData.Add(this.PointToClient(new Point((int)etmpx, (int)etmpy)));
+            gazeData.Add(this.PointToClient(new Point((int)((int)etmpx * 0.8), (int)((int)etmpy * 0.8)-DY)));
+            //gazeData.Add(new Point((int)etmpx - this.Location.X, (int)etmpy-this.Location.Y));
 
             gr.FillRectangle(fon, 0, 0, (int) (PCM * FW), (int)(PCM*FH));
 
             if (lineLen < ll0)
             {
                 cP = pointCM(length45x(lineLen), length45x(lineLen));
+                //cP = pointCM(-5, -5);
             }
             else if (lineLen < ll1 + ll0)
             {
                 cP = pointRl(scx, scy, scrad, Math.PI / 4 * 3, ll0 - lineLen);
+                //cP = pointCM(0, 0);
             }
             else if (lineLen < ll1 + ll0 + ll2)
             {
                 cP = pointRl(scx, scy, scrad, 0 - Math.PI / 4, 0);
                 cP.X -= (int)(PCM * length45x(lineLen - ll0 - ll1));
                 cP.Y += (int)(PCM * length45x(lineLen - ll0 - ll1));
+                //cP = pointCM(5, 5);
             }
             else if (lineLen < ll1 + ll0 + ll2 + ll3)
             {
                 cP = pointRl(0 - bcd, 0, bcrad, 0 - Math.PI / 4, ll0 + ll1 + ll2 - lineLen);
+                //cP = pointCM(-5, 5);
             }
+            /*
             else if (lineLen < ll1 + ll0 + ll2 * 2 + ll3)
             {
                 cP = pointRl(0 - bcd, 0, bcrad, Math.PI / 4, 0);
@@ -138,14 +145,24 @@ namespace sharp_eye
                 cP.X += (int)(PCM * length45x(lineLen - (ll0 * 3 + ll1 * 4 + ll2 * 4 + ll3 * 2)));
                 cP.Y -= (int)(PCM * length45x(lineLen - (ll0 * 3 + ll1 * 4 + ll2 * 4 + ll3 * 2)));
             }
+            */
             else
             {
                 timer1.Enabled = false;
+                stream.Dispose();
                 gr.FillRectangle(fon, 0, 0, (int)(PCM * FW), (int)(PCM * FH));
-                for (var i =1; i<gazeData.Count; i++)
+                for (var i =3; i<gazeData.Count; i++)
                 {
                     gr.DrawLine(p, gazeData[i-1].X, gazeData[i-1].Y, gazeData[i].X, gazeData[i].Y);
                 }
+                cP = pointCM(-5, -5);
+                drawDot(cP.X, cP.Y);
+                cP = pointCM(0, 0);
+                drawDot(cP.X, cP.Y);
+                cP = pointCM(5, 5);
+                drawDot(cP.X, cP.Y);
+                cP = pointCM(-5, 5);
+                drawDot(cP.X, cP.Y);
 
             }
 
@@ -180,7 +197,10 @@ namespace sharp_eye
             cP = pointCM(0, 0);
             drawDot(cP.X, cP.Y);
 
-            
+
+            eyeX = new EyeXHost();
+            eyeX.Start();
+
             gazeData = new List<Point>();
             /*
             gazeData.Add(new Point(50, 50));
@@ -206,10 +226,16 @@ namespace sharp_eye
             ll2 = (ll0 + scrad * 2 - bcrad) + bcd / Math.Cos(Math.PI / 4);
             ll3 = Math.PI * bcrad * 1.5;
             lineLen = 0;
-
+            gazeData.Clear();
+            //gazeData.Add(pointCM(0, 0));
             //set timer
             timer1.Interval = (int)( 1 / FREQ * 1000);
             timer1.Enabled = true;
+            //start streaming gaze data
+            stream = eyeX.CreateGazePointDataStream(GazePointDataMode.Unfiltered);
+            stream.Next += Stream_Next;
+
+
 
             /*
             var centrPoint = pointCM(0, 0);
@@ -229,13 +255,10 @@ namespace sharp_eye
             Invalidate();
             */
 
-            
-            eyeX = new EyeXHost();
-            eyeX.Start();
+
             
             
-            var stream = eyeX.CreateGazePointDataStream(GazePointDataMode.LightlyFiltered);
-            stream.Next += Stream_Next;
+            
 
             /*
             timer1.Enabled = true;
@@ -252,6 +275,14 @@ namespace sharp_eye
         {
 
         }
+        private void ToList(Point point)
+        {
+          
+            if (InvokeRequired)
+                Invoke((Action<Point>)ToList, point);
+            else
+                gazeData.Add(this.PointToClient(point));
+        }
 
         private void Stream_Next(object sender, GazePointEventArgs e)
         {
@@ -259,6 +290,8 @@ namespace sharp_eye
             //textBox1.Text = "Gaze point at " + e.X + " " + e.Y;
             etmpx = e.X;
             etmpy = e.Y;
+            ToList(new Point((int)((int)etmpx * 0.8), (int)((int)etmpy * 0.8) - DY));
+            //gazeData.Add(this.PointToClient(new Point((int)etmpx, (int)etmpy)));
         }
 
         private void button2_Click(object sender, EventArgs e)
@@ -270,7 +303,8 @@ namespace sharp_eye
         {
             fgr = e.Graphics;
             fgr.DrawImage(bm, 0, DY);
-        }
+            label2.Text = "Form location " + this.Location.X + " " + this.Location.Y + " " ;
+       }
         void updateGr()
         {
             
