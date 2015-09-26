@@ -71,7 +71,7 @@ namespace sharp_eye
 
         private void timer1_Tick(object sender, EventArgs e)
         {
-            gazeData.Add(this.PointToClient(new Point((int)((int)etmpx * 0.8), (int)((int)etmpy * 0.8)-DY)));
+            //gazeData.Add(this.PointToClient(new Point((int)((int)etmpx * 0.8), (int)((int)etmpy * 0.8)-DY)));
             //gazeData.Add(new Point((int)etmpx - this.Location.X, (int)etmpy-this.Location.Y));
 
             gr.FillRectangle(fon, 0, 0, (int) (PCM * FW), (int)(PCM*FH));
@@ -149,6 +149,7 @@ namespace sharp_eye
             else
             {
                 timer1.Enabled = false;
+                stream.Next += null;
                 stream.Dispose();
                 gr.FillRectangle(fon, 0, 0, (int)(PCM * FW), (int)(PCM * FH));
                 for (var i =3; i<gazeData.Count; i++)
