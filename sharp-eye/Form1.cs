@@ -10,8 +10,14 @@ using System.Windows.Forms;
 using EyeXFramework;
 using Tobii.EyeX.Framework;
 
+
+//%%% TODO - какой то спец таймер для анимации без мерцания
 namespace sharp_eye
 {
+    public class F2
+    {
+        public string text;
+    }
     public partial class Form1 : Form
     {
         Graphics gr,fgr;      
@@ -19,10 +25,13 @@ namespace sharp_eye
         SolidBrush fon; 
         SolidBrush fig;
         Bitmap bm;
+        private Form2 form2 = new Form2();
+        
 
         private EyeXHost eyeX;
 
-        double PCM=45.5, SPEED=4.0, FW=24.0, FH=16.0, FREQ=25.0, DS=0.3;
+        double PCM=55.4, SPEED=4.0, FW=24.0, FH=16.0, FREQ=50.0, DS=0.3;
+        double eyeK = 1.0;
         //Pixels per CM, cm per second, Field Width in cm, Field Heigth in cm, frames per sec, Dot Size in cm
         int DY = 30;
         //field Delta by Y
@@ -42,6 +51,11 @@ namespace sharp_eye
         float angle = 0;
         int step = 1;
 
+        private void button4_Click(object sender, EventArgs e)
+        {
+            MessageBox.Show("tB = " + form2.getText());
+            form2.Show();
+        }
 
         Point pointCM(double cmx, double cmy)
         {
@@ -67,6 +81,7 @@ namespace sharp_eye
         public Form1()
         {
             InitializeComponent();
+            DoubleBuffered = true;
         }
 
         private void timer1_Tick(object sender, EventArgs e)
@@ -98,7 +113,7 @@ namespace sharp_eye
                 cP = pointRl(0 - bcd, 0, bcrad, 0 - Math.PI / 4, ll0 + ll1 + ll2 - lineLen);
                 //cP = pointCM(-5, 5);
             }
-            /*
+            // /*
             else if (lineLen < ll1 + ll0 + ll2 * 2 + ll3)
             {
                 cP = pointRl(0 - bcd, 0, bcrad, Math.PI / 4, 0);
@@ -145,7 +160,7 @@ namespace sharp_eye
                 cP.X += (int)(PCM * length45x(lineLen - (ll0 * 3 + ll1 * 4 + ll2 * 4 + ll3 * 2)));
                 cP.Y -= (int)(PCM * length45x(lineLen - (ll0 * 3 + ll1 * 4 + ll2 * 4 + ll3 * 2)));
             }
-            */
+            // */
             else
             {
                 timer1.Enabled = false;
@@ -168,7 +183,7 @@ namespace sharp_eye
             }
 
             drawDot(cP.X, cP.Y);
-            lineLen += SPEED / FW;
+            lineLen += SPEED / FREQ;
 
             /*
             angle += step;
@@ -291,7 +306,7 @@ namespace sharp_eye
             //textBox1.Text = "Gaze point at " + e.X + " " + e.Y;
             etmpx = e.X;
             etmpy = e.Y;
-            ToList(new Point((int)((int)etmpx * 0.8), (int)((int)etmpy * 0.8) - DY));
+            ToList(new Point((int)((int)etmpx * eyeK), (int)((int)etmpy * eyeK) - DY));
             //gazeData.Add(this.PointToClient(new Point((int)etmpx, (int)etmpy)));
         }
 
