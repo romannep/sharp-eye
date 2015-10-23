@@ -11,7 +11,7 @@ using EyeXFramework;
 using Tobii.EyeX.Framework;
 
 
-//%%% TODO - какой то спец таймер для анимации без мерцания
+//%%% TODO - какой то спец таймер для анимации без мерцания high resolution timer multimedia timer
 namespace sharp_eye
 {
 
@@ -27,7 +27,7 @@ namespace sharp_eye
 
         private EyeXHost eyeX;
 
-        double PCM=55.4, SPEED=4.0, FW=24.0, FH=16.0, FREQ=50.0, DS=0.3;
+        double PCM=55.4, SPEED=5.5, FW=24.0, FH=16.0, FREQ=50.0, DS=0.3;
         double eyeK = 1.0;
         //Pixels per CM, cm per second, Field Width in cm, Field Heigth in cm, frames per sec, Dot Size in cm
         int DY = 30;
@@ -161,7 +161,7 @@ namespace sharp_eye
             else
             {
                 timer1.Enabled = false;
-                stream.Next += null;
+                stream.Next -= Stream_Next;
                 stream.Dispose();
                 gr.FillRectangle(fon, 0, 0, (int)(PCM * FW), (int)(PCM * FH));
                 for (var i =3; i<gazeData.Count; i++)

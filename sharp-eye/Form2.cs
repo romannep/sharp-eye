@@ -12,7 +12,6 @@ namespace sharp_eye
 {
     public partial class Form2 : Form
     {
-        public F2 f2 = new F2();
         public Form2()
         {
             InitializeComponent();
