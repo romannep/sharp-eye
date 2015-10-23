@@ -14,10 +14,7 @@ using Tobii.EyeX.Framework;
 //%%% TODO - какой то спец таймер для анимации без мерцания
 namespace sharp_eye
 {
-    public class F2
-    {
-        public string text;
-    }
+
     public partial class Form1 : Form
     {
         Graphics gr,fgr;      
